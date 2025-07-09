@@ -1,16 +1,21 @@
 import queue, threading, os
-from files.src.esearcher import make_esearch_call
-from files.src.efetcher_and_parser import make_efetch_call__and_parse
-from files.src.save_to_csv import make_csv
+from dotenv import load_dotenv
+from esearcher import make_esearch_call
+from efetcher_and_parser import make_efetch_call__and_parse
+from save_to_csv import make_csv
 
-RETMAX = 100
-TOTAL_RECORDS = 1000
+load_dotenv()
+
+RETMAX = 1000
 RATE_LIMIT = 10
 NUM_FETCH_THREADS = 3
 
-fetch_queue = queue.Queue()
-data_queue = queue.Queue()
-shutdown_event = threading.Event()
+from queues import fetch_queue, data_queue, shutdown_event
+
+query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
+NCBI_API_KEY = os.getenv("NCBI_API_KEY")
+NCBI_EMAIL = os.getenv("email")
+TOTAL_RECORDS, webenv, query_key = make_esearch_call(query = query, api_key = NCBI_API_KEY, email = NCBI_EMAIL)
 
 def main():
     #Fill the fetch queue with start(retstart) for each fetch call
@@ -24,8 +29,8 @@ def main():
 
     # Start fetch threads
     fetch_threads = []
-    for _ in range(NUM_FETCH_THREADS):
-        t = threading.Thread(target=make_efetch_call__and_parse)
+    for i in range(NUM_FETCH_THREADS):
+        t = threading.Thread(target=make_efetch_call__and_parse,args=(i+1, webenv, query_key, NCBI_EMAIL, NCBI_API_KEY))
         t.start()
         fetch_threads.append(t)
 
@@ -41,5 +46,5 @@ def main():
 
     print("All threads done.")
 
-if __name__ == "__main__":
-    pass
+if __name__ == "__main__":        
+    main()
