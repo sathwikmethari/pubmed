@@ -38,7 +38,8 @@ def make_esearch_call(query: str, api_key: None | str, email: str = "your_email@
 
         webenv = data["webenv"]
         query_key = data["querykey"]
-        query_is_valid = True
+        if count>0:
+            query_is_valid = True
         end_time = time.time()
         print(f"Total results: {count}.  Time taken: {end_time - start_time:.4f} sec")
     

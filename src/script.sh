@@ -92,7 +92,7 @@ elif [[ "$input" == "-h" || "$input" == "--help" ]]; then
 
 "
 elif [[ "$input" == "-f" || "$input" == "--file" ]]; then
-    echo "output.csv : output file name."
+    echo "output file name is of format email_inputted.csv ."
 
 elif [[ "$input" == "exit" ]]; then
     echo "bye!"

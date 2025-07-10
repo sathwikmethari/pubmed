@@ -136,7 +136,7 @@ def make_csv(output_file:str) -> None:
 
     # Final save
     df = pd.DataFrame(buffer)
-    df["NonAcademicAuthors"] = df["NonAcademicAuthors"].apply(lambda x: ", ".join(x))
+    df["NonAcademicAuthors"] = df["NonAcademicAuthors"]
     df["CompanyAffiliations"] = df["CompanyAffiliations"].apply(lambda x: ", ".join(x))
     df.to_csv(output_file, index=False)
     print(f"[Writer] - Saved records to {output_file}")
