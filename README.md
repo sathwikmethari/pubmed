@@ -22,7 +22,12 @@
   <ul>
     <li>Folder containg the data obtained from fetches in a csv.</li>
   </ul>
-  
+
+## Imp
+1. Had to cut max records fetch to 10K. Tried various methods to get above this limit, couldn't find any.
+2. Can tinker around with filters, thread numbers in config (default=3).
+3. There is Server Latency from NCBI (expected). 
+
 ## Instructions
 <ul>
     <li>Install poetry <code>pipx install poetry</code></li>
