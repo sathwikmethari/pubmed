@@ -49,7 +49,7 @@ def make_efetch_call__and_parse(worker_id:int, webenv:str, query_key:str, email:
 
 if __name__ == "__main__":
     email, api_key, query = get_email_api_query(base_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi")
-    #query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
+    query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
     query_is_valid, count, webenv, query_key = make_esearch_call(query = query, email=email, api_key=api_key)
     if query_is_valid:
         fetch_queue.put(1000)

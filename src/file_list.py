@@ -1,6 +1,6 @@
 import os
 
-def main():
+def main() -> None:
     files = os.listdir("outputs")
     if files:
         for file in files:

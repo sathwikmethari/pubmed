@@ -2,7 +2,7 @@
 import requests, getpass
 from src.utils import validate_email_syntax, default_params
 
-def get_email_api_query(base_url:str) -> tuple[str, None | str]:
+def get_email_api_query(base_url:str) -> tuple[str, None | str, str]:
     while True:
         email=input("Enter your email\n>>  ").strip()
         if validate_email_syntax(email):

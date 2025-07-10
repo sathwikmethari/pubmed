@@ -2,7 +2,7 @@ import threading, yaml
 from src.esearcher import make_esearch_call
 from src.efetcher_and_parser import make_efetch_call__and_parse
 from src.email_api import get_email_api_query
-from src.save_to_csv import make_csv
+from src.utils import make_csv
 from src.queues import fetch_queue, data_queue, shutdown_event
 
 
@@ -15,7 +15,7 @@ num_fetch_threads = config["ncbi"]["num_fetch_threads"]
 total_fetchable_records = config["ncbi"]["total_fetchable_records"]  
 
 
-def main(webenv, query_key, email, api_key):
+def main(webenv:str, query_key:str, email:str, api_key:str) -> None:
     #Fill the fetch queue with start(retstart) for each fetch call
     output_file = f"outputs/{email}.csv" 
     for start in range(0, total_fetchable_records, retmax):
