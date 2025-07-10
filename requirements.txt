@@ -1,4 +1,3 @@
-ipykernel
 requests
 pandas
-biopython
+pyyaml

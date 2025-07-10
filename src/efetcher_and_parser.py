@@ -1,16 +1,16 @@
-import os, requests, time
-from dotenv import load_dotenv
+import requests, time, yaml
 import xml.etree.ElementTree as ET
 
-from utils import parsing_an_article
-from esearcher import make_esearch_call
-from queues import fetch_queue, data_queue, shutdown_event
+from src.email_api import get_email_api_query
+from src.esearcher import make_esearch_call
+from src.utils import parsing_an_article, default_params
+from src.queues import fetch_queue, data_queue
 
-load_dotenv()
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
 
-
-RATE_LIMIT = 10  # per second
-RETMAX = 1000
+rate_limit = config["ncbi"]["rate_limit"]  # per second
+retmax = config["ncbi"]["retmax"]  
 
 def make_efetch_call__and_parse(worker_id:int, webenv:str, query_key:str, email:str, api_key:str) -> None:
     while not fetch_queue.empty():
@@ -21,16 +21,18 @@ def make_efetch_call__and_parse(worker_id:int, webenv:str, query_key:str, email:
                 "query_key": query_key,
                 "WebEnv": webenv,
                 "retstart": start,
-                "retmax": RETMAX,
+                "retmax": retmax,
                 "retmode": "xml",
                 "email": email,
                 "api_key": api_key
             }
-
+            
+            start_time = time.time()
             res = requests.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi", params=params)
             res.raise_for_status()
+            end_time = time.time()
 
-            print(f"[EF-Thread-{worker_id}] Fetched records {start}-{start + RETMAX - 1}")
+            print(f"[EF-Thread-{worker_id}] Fetched records {start}-{start + retmax - 1}. Time taken: {end_time - start_time:.4f} sec")
             root = ET.fromstring(res.text)
             articles = root.findall(".//PubmedArticle")
 
@@ -42,13 +44,13 @@ def make_efetch_call__and_parse(worker_id:int, webenv:str, query_key:str, email:
             print(f"[EF-{worker_id}] Error at start={start}: {e}")
         finally:
             fetch_queue.task_done()
-            time.sleep(1.0 / RATE_LIMIT)  # To respect NCBI limit
+            time.sleep(1.0 / rate_limit)  # To respect NCBI limit
 
 
 if __name__ == "__main__":
-    NCBI_API_KEY = os.getenv("NCBI_API_KEY")
-    NCBI_EMAIL = os.getenv("email")
-    query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
-    webenv, query_key = make_esearch_call(query = query, email = NCBI_EMAIL, api_key = NCBI_API_KEY)
-    fetch_queue.put(1000)
-    make_efetch_call__and_parse(worker_id = 1, webenv = webenv, query_key = query_key, email = NCBI_EMAIL, api_key = NCBI_API_KEY)
+    email, api_key, query = get_email_api_query(base_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi")
+    #query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
+    query_is_valid, count, webenv, query_key = make_esearch_call(query = query, email=email, api_key=api_key)
+    if query_is_valid:
+        fetch_queue.put(1000)
+        #make_efetch_call__and_parse(worker_id = 1, webenv = webenv, query_key = query_key, email = email, api_key = api_key)

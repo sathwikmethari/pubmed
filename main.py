@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-script_filename = "myscript.sh"
+script_filename = "src/script.sh"
 
 # Step 1: Make the script executable
 os.chmod(script_filename, 0o755)

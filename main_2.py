@@ -1,36 +1,34 @@
-import os, threading
-from dotenv import load_dotenv
+import threading, yaml
 from src.esearcher import make_esearch_call
 from src.efetcher_and_parser import make_efetch_call__and_parse
+from src.email_api import get_email_api_query
 from src.save_to_csv import make_csv
 from src.queues import fetch_queue, data_queue, shutdown_event
 
-load_dotenv()
 
-RETMAX = 1000
-RATE_LIMIT = 10
-NUM_FETCH_THREADS = 3
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+rate_limit = config["ncbi"]["rate_limit"]  # per second
+retmax = config["ncbi"]["retmax"]
+num_fetch_threads = config["ncbi"]["num_fetch_threads"]
+total_fetchable_records = config["ncbi"]["total_fetchable_records"]  
 
 
-query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
-NCBI_API_KEY = os.getenv("NCBI_API_KEY")
-NCBI_EMAIL = os.getenv("email")
-TOTAL_RECORDS, webenv, query_key = make_esearch_call(query = query, api_key = NCBI_API_KEY, email = NCBI_EMAIL)
-
-def main():
+def main(webenv, query_key, email, api_key):
     #Fill the fetch queue with start(retstart) for each fetch call
-    for start in range(0, TOTAL_RECORDS, RETMAX):
+    output_file = f"outputs/{email}.csv" 
+    for start in range(0, total_fetchable_records, retmax):
         fetch_queue.put(start)
-
-    # Start writer
-    output_file = "output.csv"
     writer = threading.Thread(target=make_csv, args=(output_file,))
     writer.start()
+    if api_key:
+        num_fetch_threads = 5
 
     # Start fetch threads
     fetch_threads = []
-    for i in range(NUM_FETCH_THREADS):
-        t = threading.Thread(target=make_efetch_call__and_parse,args=(i+1, webenv, query_key, NCBI_EMAIL, NCBI_API_KEY))
+    for i in range(num_fetch_threads):
+        t = threading.Thread(target=make_efetch_call__and_parse,args=(i+1, webenv, query_key, email, api_key))
         t.start()
         fetch_threads.append(t)
 
@@ -46,5 +44,11 @@ def main():
 
     print("All threads done.")
 
-if __name__ == "__main__":        
-    main()
+if __name__ == "__main__":
+    email, api_key, query = get_email_api_query(base_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi")
+    #query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
+    query_is_valid, count, webenv, query_key = make_esearch_call(query = query, email=email, api_key=api_key)
+    if query_is_valid:
+        make_efetch_call__and_parse(worker_id = 1, webenv = webenv, query_key = query_key, email = email, api_key = api_key)
+        main(webenv =webenv, query_key = query_key, email = email, api_key = api_key)
+    

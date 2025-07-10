@@ -12,7 +12,7 @@ while true; do
 read -p ">> " input
 if [[ "$input" == "run" ]]; then
     echo "Running Python script..."
-    python3 example.py
+    python3 main_2.py
 elif [[ "$input" == "-h" || "$input" == "--help" ]]; then
     echo -e "
     -- start of page --
@@ -92,8 +92,7 @@ elif [[ "$input" == "-h" || "$input" == "--help" ]]; then
 
 "
 elif [[ "$input" == "-f" || "$input" == "--file" ]]; then
-    echo "will add later!"
-    date
+    echo "output.csv : output file name."
 
 elif [[ "$input" == "exit" ]]; then
     echo "bye!"

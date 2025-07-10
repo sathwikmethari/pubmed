@@ -1,6 +1,6 @@
 import queue
 import pandas as pd
-from queues import data_queue, shutdown_event
+from src.queues import data_queue, shutdown_event
 
 def make_csv(output_file):
     buffer = []
@@ -17,4 +17,4 @@ def make_csv(output_file):
     df["NonAcademicAuthors"] = df["NonAcademicAuthors"].apply(lambda x: ", ".join(x))
     df["CompanyAffiliations"] = df["CompanyAffiliations"].apply(lambda x: ", ".join(x))
     df.to_csv(output_file, index=False)
-    print(f"[Writer] - Saved {len(buffer)} records to {output_file}")
+    print(f"[Writer] - Saved records to {output_file}")
