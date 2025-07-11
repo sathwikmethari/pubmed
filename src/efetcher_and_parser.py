@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 
 from src.email_api import get_email_api_query
 from src.esearcher import make_esearch_call
-from src.utils import parsing_an_article, default_params
+from src.utils import parsing_an_article
 from src.queues import fetch_queue, data_queue
 
 with open("config.yaml", "r") as f:
@@ -12,7 +12,7 @@ with open("config.yaml", "r") as f:
 rate_limit = config["ncbi"]["rate_limit"]  # per second
 retmax = config["ncbi"]["retmax"]  
 
-def make_efetch_call__and_parse(worker_id:int, webenv:str, query_key:str, email:str, api_key:str) -> None:
+def make_efetch_call_and_parse(worker_id:int, webenv:str, query_key:str, email:str, api_key:str) -> None:
     while not fetch_queue.empty():
         try:
             start = fetch_queue.get(timeout=2)
@@ -46,11 +46,8 @@ def make_efetch_call__and_parse(worker_id:int, webenv:str, query_key:str, email:
             fetch_queue.task_done()
             time.sleep(1.0 / rate_limit)  # To respect NCBI limit
 
-
 if __name__ == "__main__":
-    email, api_key, query = get_email_api_query(base_url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi")
-    query = "covid-19 AND 2024[dp] AND humans[MeSH Terms]"
-    query_is_valid, count, webenv, query_key = make_esearch_call(query = query, email=email, api_key=api_key)
-    if query_is_valid:
-        fetch_queue.put(1000)
-        #make_efetch_call__and_parse(worker_id = 1, webenv = webenv, query_key = query_key, email = email, api_key = api_key)
+    email, api_key, query = get_email_api_query()
+    count, webenv, query_key = make_esearch_call(query = query, email=email, api_key=api_key)
+    fetch_queue.put(100)
+    make_efetch_call_and_parse(worker_id = 1, webenv = webenv, query_key = query_key, email = email, api_key = api_key)

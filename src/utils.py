@@ -1,4 +1,4 @@
-import re, queue
+import re, queue, requests
 import pandas as pd
 from src.queues import data_queue, shutdown_event
 from typing import *
@@ -9,33 +9,24 @@ def validate_email_syntax(email:str) -> bool:
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email) is not None
 
-#Dictionary class with default params
-class default_params(dict):
 
-    def __init__(self, **kwargs):
-        super().__init__({
-            "db": "pubmed",
-            "retstart": 0,
-            "retmax": 0,
-            "retmode": "json",
-            "email": None,
-            "api_key": None,
-        })
+#Validate query
+def validate_query(query: str) -> bool:
+    params = {
+        "db": "pubmed",
+        "term": query,
+        "retmode": "json",
+        "retmax": 0
+    }
 
-        # Allow overrides via kwargs
-        for key, value in kwargs.items():
-            if key in self:
-                self[key] = value
-
-    def to_dict(self):
-        return {
-            "db": self["db"],
-            "retstart": self["retstart"],
-            "retmax": self["retmax"],
-            "retmode":self["retmode"],
-            "email": self["email"],
-            "api_key": self["api_key"],
-        }
+    r = requests.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi", params=params)
+    data = r.json()
+    warnings = data['esearchresult'].get("warninglist", {}).get("outputmessage", [])
+    count = int(data['esearchresult'].get("count", 0))
+    
+    if ("esearchresult" not in data) or warnings or count==0:
+        return False
+    return True
 
 #Dictionary class to store PMID details
 class PubMedArticleData(dict):
@@ -136,7 +127,5 @@ def make_csv(output_file:str) -> None:
 
     # Final save
     df = pd.DataFrame(buffer)
-    df["NonAcademicAuthors"] = df["NonAcademicAuthors"]
-    df["CompanyAffiliations"] = df["CompanyAffiliations"].apply(lambda x: ", ".join(x))
     df.to_csv(output_file, index=False)
     print(f"[Writer] - Saved records to {output_file}")
