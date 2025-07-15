@@ -18,8 +18,9 @@ def main(webenv:str, query_key:str, email:str, api_key:str) -> None:
     retmax = config["ncbi"]["retmax"]
     total_fetchable_records = config["ncbi"]["total_fetchable_records"]  
     num_fetch_threads = config["ncbi"]["num_fetch_threads"]
+    
     if api_key:
-        num_fetch_threads = 5
+        num_fetch_threads = config["ncbi"]["num_fetch_threads_with_api"]
 
     output_file = f"outputs/{email}.csv"
 

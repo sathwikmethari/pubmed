@@ -1,5 +1,6 @@
 ncbi:
   retmax: 1000
   num_fetch_threads: 3
+  num_fetch_threads_with_api: 10
   total_fetchable_records: 10000
   rate_limit: 10
